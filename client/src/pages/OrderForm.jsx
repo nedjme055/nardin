@@ -49,6 +49,23 @@ export default function OrderForm({ wilayas }) {
 
       if (!res.ok) throw new Error('خطأ في الإرسال')
 
+      const selectedProduct = PRODUCTS.find(p => p.id === form.product)
+
+      // Meta Pixel: Lead event
+      if (typeof window.fbq === 'function') {
+        fbq('track', 'Lead', {
+          content_name: selectedProduct?.name,
+          content_category: 'عشبة الناردين',
+          value: selectedProduct?.price,
+          currency: 'DZD',
+        })
+        fbq('track', 'Purchase', {
+          content_name: selectedProduct?.name,
+          value: selectedProduct?.price,
+          currency: 'DZD',
+        })
+      }
+
       setSuccess(true)
       toast.success('تم إرسال طلبك بنجاح! سنتصل بك قريباً')
     } catch (err) {
