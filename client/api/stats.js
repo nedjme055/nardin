@@ -1,12 +1,12 @@
 import { readOrders } from './_lib/storage.js'
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const orders = readOrders()
+  const orders = await readOrders()
   const today = new Date().toISOString().split('T')[0]
 
   const stats = {

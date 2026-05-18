@@ -1,17 +1,21 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { join } from 'path'
+import { kv } from '@vercel/kv'
 
-const ORDERS_FILE = join('/tmp', 'orders.json')
+const ORDERS_KEY = 'nardin_orders'
 
-export function readOrders() {
+export async function readOrders() {
   try {
-    if (existsSync(ORDERS_FILE)) {
-      return JSON.parse(readFileSync(ORDERS_FILE, 'utf8'))
-    }
-  } catch {}
-  return []
+    const orders = await kv.get(ORDERS_KEY)
+    return orders || []
+  } catch (err) {
+    console.error('KV read error:', err)
+    return []
+  }
 }
 
-export function writeOrders(orders) {
-  writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2))
+export async function writeOrders(orders) {
+  try {
+    await kv.set(ORDERS_KEY, orders)
+  } catch (err) {
+    console.error('KV write error:', err)
+  }
 }

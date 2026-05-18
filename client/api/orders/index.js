@@ -1,8 +1,8 @@
 import { readOrders, writeOrders } from '../_lib/storage.js'
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'GET') {
-    const orders = readOrders()
+    const orders = await readOrders()
     return res.status(200).json(orders)
   }
 
@@ -13,7 +13,7 @@ export default function handler(req, res) {
       return res.status(400).json({ error: 'الحقول المطلوبة ناقصة' })
     }
 
-    const orders = readOrders()
+    const orders = await readOrders()
     const newOrder = {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
       fullName,
@@ -28,7 +28,7 @@ export default function handler(req, res) {
     }
 
     orders.unshift(newOrder)
-    writeOrders(orders)
+    await writeOrders(orders)
 
     return res.status(201).json({ success: true, order: newOrder })
   }
