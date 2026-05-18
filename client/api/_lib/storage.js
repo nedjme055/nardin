@@ -1,21 +1,34 @@
-import { kv } from '@vercel/kv'
+import { put, list, del } from '@vercel/blob'
 
-const ORDERS_KEY = 'nardin_orders'
+const BLOB_NAME = 'orders.json'
 
 export async function readOrders() {
   try {
-    const orders = await kv.get(ORDERS_KEY)
+    const { blobs } = await list({ prefix: BLOB_NAME })
+    if (blobs.length === 0) return []
+    
+    const response = await fetch(blobs[0].url)
+    const orders = await response.json()
     return orders || []
   } catch (err) {
-    console.error('KV read error:', err)
+    console.error('Blob read error:', err)
     return []
   }
 }
 
 export async function writeOrders(orders) {
   try {
-    await kv.set(ORDERS_KEY, orders)
+    // Delete old blob first
+    const { blobs } = await list({ prefix: BLOB_NAME })
+    for (const blob of blobs) {
+      await del(blob.url)
+    }
+    // Write new blob
+    await put(BLOB_NAME, JSON.stringify(orders), {
+      access: 'public',
+      addRandomSuffix: false,
+    })
   } catch (err) {
-    console.error('KV write error:', err)
+    console.error('Blob write error:', err)
   }
 }
