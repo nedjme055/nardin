@@ -8,7 +8,7 @@ export async function readOrders() {
     const result = await list({ prefix: BLOB_PATH, limit: 1, token })
     if (!result.blobs || result.blobs.length === 0) return []
 
-    const response = await fetch(result.blobs[0].url)
+    const response = await fetch(result.blobs[0].downloadUrl || result.blobs[0].url)
     if (!response.ok) return []
 
     const text = await response.text()
@@ -22,7 +22,7 @@ export async function readOrders() {
 
 export async function writeOrders(orders) {
   await put(BLOB_PATH, JSON.stringify(orders), {
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
     contentType: 'application/json',
     token,
