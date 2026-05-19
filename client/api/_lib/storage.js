@@ -1,30 +1,23 @@
-import { put, list } from '@vercel/blob'
+import { Redis } from '@upstash/redis'
 
-const BLOB_PATH = 'nardin-orders.json'
-const token = process.env.BLOB_READ_WRITE_TOKEN
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+})
+
+const ORDERS_KEY = 'nardin_orders'
 
 export async function readOrders() {
   try {
-    const result = await list({ prefix: BLOB_PATH, limit: 1, token })
-    if (!result.blobs || result.blobs.length === 0) return []
-
-    const response = await fetch(result.blobs[0].downloadUrl || result.blobs[0].url)
-    if (!response.ok) return []
-
-    const text = await response.text()
-    const orders = JSON.parse(text)
+    const orders = await redis.get(ORDERS_KEY)
+    if (!orders) return []
     return Array.isArray(orders) ? orders : []
   } catch (err) {
-    console.error('Blob read error:', err.message)
+    console.error('Redis read error:', err.message)
     return []
   }
 }
 
 export async function writeOrders(orders) {
-  await put(BLOB_PATH, JSON.stringify(orders), {
-    access: 'public',
-    addRandomSuffix: false,
-    contentType: 'application/json',
-    token,
-  })
+  await redis.set(ORDERS_KEY, orders)
 }
