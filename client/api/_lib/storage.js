@@ -1,34 +1,33 @@
-import { put, list, del } from '@vercel/blob'
+import { put, list } from '@vercel/blob'
 
-const BLOB_NAME = 'orders.json'
+const BLOB_PATH = 'nardin-orders.json'
 
 export async function readOrders() {
   try {
-    const { blobs } = await list({ prefix: BLOB_NAME })
-    if (blobs.length === 0) return []
-    
-    const response = await fetch(blobs[0].url)
-    const orders = await response.json()
-    return orders || []
+    const result = await list({ prefix: BLOB_PATH, limit: 1 })
+    if (!result.blobs || result.blobs.length === 0) return []
+
+    const response = await fetch(result.blobs[0].url)
+    if (!response.ok) return []
+
+    const text = await response.text()
+    const orders = JSON.parse(text)
+    return Array.isArray(orders) ? orders : []
   } catch (err) {
-    console.error('Blob read error:', err)
+    console.error('Blob read error:', err.message)
     return []
   }
 }
 
 export async function writeOrders(orders) {
   try {
-    // Delete old blob first
-    const { blobs } = await list({ prefix: BLOB_NAME })
-    for (const blob of blobs) {
-      await del(blob.url)
-    }
-    // Write new blob
-    await put(BLOB_NAME, JSON.stringify(orders), {
+    await put(BLOB_PATH, JSON.stringify(orders), {
       access: 'public',
       addRandomSuffix: false,
+      contentType: 'application/json',
     })
   } catch (err) {
-    console.error('Blob write error:', err)
+    console.error('Blob write error:', err.message)
+    throw err
   }
 }
