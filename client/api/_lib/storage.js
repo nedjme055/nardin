@@ -22,7 +22,7 @@ export async function readOrders() {
 
 export async function writeOrders(orders) {
   await put(BLOB_PATH, JSON.stringify(orders), {
-    access: 'private',
+    access: 'public',
     addRandomSuffix: false,
     contentType: 'application/json',
     token,
